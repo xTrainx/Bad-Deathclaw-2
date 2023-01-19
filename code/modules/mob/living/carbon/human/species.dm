@@ -578,10 +578,13 @@ GLOBAL_LIST_EMPTY(roundstart_race_names)
 
 	var/obj/item/bodypart/head/HD = H.get_bodypart(BODY_ZONE_HEAD)
 
+	if (H.dna.features["body_model"] == FEMALE) // Add FEMALE put here, seems to function well here
+		ADD_TRAIT(H, TRAIT_FEMALE, src)
+
 	if(HD && !(HAS_TRAIT(H, TRAIT_HUSK)))
 		// lipstick
 		if(H.lip_style && (LIPS in species_traits))
-			var/mutable_appearance/lip_overlay = mutable_appearance('icons/mob/human_face.dmi', "lips_[H.lip_style]", -BODY_LAYER)
+			var/mutable_appearance/lip_overlay = mutable_appearance('modular_BD2/fashion/icons/face_overlays.dmi', "lips_[H.lip_style]", -BODY_LAYER)
 			lip_overlay.color = H.lip_color
 
 			if(OFFSET_LIPS in H.dna.species.offset_features)
