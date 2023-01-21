@@ -27310,6 +27310,7 @@
 /area/f13/followers)
 "bRX" = (
 /obj/machinery/vending/hydronutrients,
+<<<<<<< HEAD
 /turf/open/floor/plating/f13/outside/desert,
 /area/f13/desert)
 "bRY" = (
@@ -27318,6 +27319,16 @@
 /area/f13/desert)
 "bRZ" = (
 /turf/open/floor/plating/f13/outside/desert,
+=======
+/turf/open/indestructible/ground/outside/desert,
+/area/f13/desert)
+"bRY" = (
+/obj/machinery/vending/hydroseeds,
+/turf/open/indestructible/ground/outside/desert,
+/area/f13/desert)
+"bRZ" = (
+/turf/open/indestructible/ground/outside/desert,
+>>>>>>> c9b6c3cda3552923faa7d9cc2572432592571406
 /area/f13/desert)
 "bSa" = (
 /obj/structure/closet/crate/freezer/blood{
@@ -30650,7 +30661,11 @@
 /obj/structure/flora/grass/wasteland{
 	pixel_x = -11
 	},
+<<<<<<< HEAD
 /turf/open/floor/plating/f13/outside/desert,
+=======
+/turf/open/indestructible/ground/outside/desert,
+>>>>>>> c9b6c3cda3552923faa7d9cc2572432592571406
 /area/f13/desert)
 "fNg" = (
 /obj/machinery/light{
