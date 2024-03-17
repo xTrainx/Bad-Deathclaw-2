@@ -821,13 +821,11 @@ throw use: feed someone alcohol
 
 /obj/item/reagent_containers/food/snacks/egg/winegg/attack(mob/living/M, mob/living/user, attackchain_flags = NONE, damage_multiplier = 1)
 	to_chat(user, "you use the [src] on [M]")
-	if(iscarbon(M))
-		var/location = get_turf(M)
-		var/boozetype = get_random_drink()
-		var/booze = new boozetype(location)
+	if(istype(M, /mob/living/carbon/human))
+		var/mob/living/carbon/human/drinkerer = M
+		drinkerer.thirst = THIRST_LEVEL_FULL
 		qdel(src)
-		M.put_in_active_hand(booze)
-		to_chat(M, "Hey free booze!!")
+		to_chat(M, "you feel refreshed!!")
 	else if(istype(M, /mob/living/simple_animal/chicken))
 		var/mob/living/simple_animal/chicken/target = M
 		target.cheery = TRUE
