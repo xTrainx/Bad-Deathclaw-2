@@ -380,8 +380,24 @@
 			else
 				to_chat(user, "<span class='warning'>You cannot seem to get \the [src] out of your hands!</span>")
 				return
-		//else if (cell)
-			//to_chat(user, "<span class='notice'>There's already a cell in \the [src].</span>")
+	else if (istype(A, /obj/item/feather/chicken/electric))
+		var/obj/item/feather/chicken/electric/rechargingthing = A
+		if(user.a_intent == INTENT_HARM)
+			return ..()
+		if(rechargingthing.cantbeused(user))
+			return
+		if(rechargingthing.recharge(src, user))
+			return
+	else if (istype(A, /obj/item/inducer))
+		var/obj/item/inducer/rechargingthing = A
+		if(user.a_intent == INTENT_HARM)
+			return ..()
+		if(rechargingthing.cantbeused(user))
+			return
+		if(rechargingthing.recharge(src, user))
+			return
+	//else if (cell)
+		//to_chat(user, "<span class='notice'>There's already a cell in \the [src].</span>")
 
 /obj/item/gun/energy/examine(mob/user)
 	. = ..()

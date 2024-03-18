@@ -428,6 +428,8 @@
 			mutationbars["Iron_Wings"] += 20
 		if(istype(yums, GRAPES))
 			mutationbars["Alcoholic_Wings"] += 20
+		if(istype(yums, GLOWCAPS))
+			mutationbars["Electric_Wings"] += 20
 		qdel(yums)
 		visible_message("<span class='warning'>[name] eats the [yums]!</span>")
 	else
@@ -451,6 +453,8 @@
 				egg_type = /obj/item/reagent_containers/food/snacks/egg/ironegg
 			if(eggmutation == "Alcoholic_Wings")
 				egg_type = /obj/item/reagent_containers/food/snacks/egg/winegg
+			if(eggmutation == "Electric_Wings")
+				egg_type = /obj/item/reagent_containers/food/snacks/egg/eleggtric
 		visible_message("<span class='alertalien'>[src] [pick(layMessage)]</span>")
 		eggsleft--
 		if(pungajuice >= 100)//Feeding punga makes it spit a normal egg
@@ -458,7 +462,7 @@
 			pungajuice -= 10
 		var/obj/item/E = new egg_type(get_turf(src))
 		if(cheery == TRUE)// happy chickens make double the eggs
-			new E
+			new egg_type(get_turf(src))
 		egg_type = initial(egg_type)// BIG IRON EDIT -end-
 		E.pixel_x = rand(-6,6)
 		E.pixel_y = rand(-6,6)
@@ -494,7 +498,7 @@
 	icon_living = "chicken_fire"
 	icon_dead = "chicken_fire_dead"
 	egg_type = /obj/item/reagent_containers/food/snacks/egg/firegg
-	food_type = list(WHEAT, PUNGA)
+	food_type = list(WHEAT, PUNGA, GLOWCAPS)
 	validColors = list("fire")
 	parentegg = /obj/item/reagent_containers/food/snacks/egg
 	feathers = list(/obj/item/feather/chicken/fire = 2)
@@ -656,7 +660,7 @@ WHEN DESTROYED: create 2 egg shells that can be used as caltrops or knifes */
 	icon_living = "chicken_iron"
 	icon_dead = "chicken_iron_dead"
 	egg_type = /obj/item/reagent_containers/food/snacks/egg/ironegg
-	food_type = list(WHEAT, PUNGA)
+	food_type = list(WHEAT, PUNGA, GLOWCAPS)
 	validColors = list("iron")
 	parentegg = /obj/item/reagent_containers/food/snacks/egg
 	feathers = list(/obj/item/feather/chicken/iron = 2)
@@ -769,7 +773,7 @@ WHEN DESTROYED: create 2 egg shells that can be used as caltrops or knifes */
 	name = "\improper Wine chicken"
 	desc = "it stumbles with each step and slurs her cluckings."
 	icon_state = "chicken_wine"
-	icon_living = "chicken_winee"
+	icon_living = "chicken_wine"
 	icon_dead = "chicken_wine_dead"
 	egg_type = /obj/item/reagent_containers/food/snacks/egg/winegg
 	food_type = list(WHEAT, PUNGA)
@@ -838,6 +842,296 @@ throw use: feed someone alcohol
 		var/booze = new boozetype(location)
 		qdel(src)
 		user.put_in_active_hand(booze)
+
+//ELECTRIC  CHICKEN
+
+/mob/living/simple_animal/chicken/electric
+	name = "\improper Electric chicken"
+	desc = "their feathers shine with an electric luster."
+	icon_state = "chicken_electric"
+	icon_living = "chicken_electric"
+	icon_dead = "chicken_electric_dead"
+	egg_type = /obj/item/reagent_containers/food/snacks/egg/eleggtric
+	food_type = list(WHEAT, PUNGA, CHILI, STEELCAPS)
+	validColors = list("electric")
+	parentegg = /obj/item/reagent_containers/food/snacks/egg/ironegg
+	feathers = list(/obj/item/feather/chicken/electric = 1)
+
+//Electric feather: mainly a good inducer, that can recharge guns
+/obj/item/feather/chicken/electric
+	name = "Electric feather"
+	desc = "you can feel sparks when you hold it."
+	icon_state = "feather-chicken-electric"
+	var/powertransfer = 1500
+	var/opened = FALSE
+	var/recharging = FALSE
+	var/cell_type = /obj/item/stock_parts/cell/hyper/egg
+	var/obj/item/stock_parts/cell/cell
+
+
+/obj/item/feather/chicken/electric/Initialize()
+	. = ..()
+	if(!cell && cell_type)
+		cell = new cell_type
+
+/obj/item/feather/chicken/electric/proc/induce(obj/item/stock_parts/cell/target, coefficient)
+	var/totransfer = min(cell.charge,(powertransfer * coefficient))
+	var/transferred = target.give(totransfer)
+	cell.use(transferred)
+	cell.update_icon()
+	target.update_icon()
+
+/obj/item/feather/chicken/electric/get_cell()
+	return cell
+
+/obj/item/feather/chicken/electric/emp_act(severity)
+	. = ..()
+	if(cell && !(. & EMP_PROTECT_CONTENTS))
+		cell.emp_act(severity)
+
+/obj/item/feather/chicken/electric/attack_obj(obj/O, mob/living/carbon/user)
+	if(user.a_intent == INTENT_HARM)
+		return ..()
+
+	if(cantbeused(user))
+		return
+
+	if(recharge(O, user))
+		return
+
+	return ..()
+
+/obj/item/feather/chicken/electric/proc/cantbeused(mob/user)
+	if(!user.IsAdvancedToolUser())
+		to_chat(user, "<span class='warning'>You don't have the dexterity to use [src]!</span>")
+		return TRUE
+
+	if(!cell)
+		to_chat(user, "<span class='warning'>[src] doesn't have a power cell installed!</span>")
+		return TRUE
+
+	if(!cell.charge)
+		to_chat(user, "<span class='warning'>[src]'s battery is dead!</span>")
+		return TRUE
+	return FALSE
+
+
+/obj/item/feather/chicken/electric/attackby(obj/item/W, mob/user)
+	if(istype(W, /obj/item/screwdriver))
+		W.play_tool_sound(src)
+		if(!opened)
+			to_chat(user, "<span class='notice'>You unscrew the battery compartment.</span>")
+			opened = TRUE
+			update_icon()
+			return
+		else
+			to_chat(user, "<span class='notice'>You close the battery compartment.</span>")
+			opened = FALSE
+			update_icon()
+			return
+	if(istype(W, /obj/item/stock_parts/cell))
+		if(opened)
+			if(!cell)
+				if(!user.transferItemToLoc(W, src))
+					return
+				to_chat(user, "<span class='notice'>You insert [W] into [src].</span>")
+				cell = W
+				update_icon()
+				return
+			else
+				to_chat(user, "<span class='notice'>[src] already has \a [cell] installed!</span>")
+				return
+
+	if(cantbeused(user))
+		return
+
+	if(recharge(W, user))
+		return
+
+	return ..()
+
+/obj/item/feather/chicken/electric/proc/recharge(atom/movable/A, mob/user)
+	if(!isturf(A) && user.loc == A)
+		return FALSE
+	if(recharging)
+		return TRUE
+	else
+		recharging = TRUE
+	var/obj/item/stock_parts/cell/C = A.get_cell()
+	var/obj/O
+	var/coefficient = 0.8
+	if(istype(A, /obj))
+		O = A
+	if(C)
+		var/done_any = FALSE
+		if(C.charge >= C.maxcharge)
+			to_chat(user, "<span class='notice'>[A] is fully charged!</span>")
+			recharging = FALSE
+			return TRUE
+		user.visible_message("[user] starts recharging [A] with [src].","<span class='notice'>You start recharging [A] with [src].</span>")
+		while(C.charge < C.maxcharge)
+			if(do_after(user, 10, target = user) && cell.charge)
+				done_any = TRUE
+				induce(C, coefficient)
+				do_sparks(1, FALSE, A)
+				if(O)
+					O.update_icon()
+			else
+				break
+		if(done_any) // Only show a message if we succeeded at least once
+			user.visible_message("[user] recharged [A]!","<span class='notice'>You recharged [A]!</span>")
+		recharging = FALSE
+		return TRUE
+	recharging = FALSE
+
+
+/obj/item/feather/chicken/electric/attack(mob/M, mob/user)
+	if(user.a_intent == INTENT_HARM)
+		return ..()
+
+	if(cantbeused(user))
+		return
+
+	if(recharge(M, user))
+		return
+	return ..()
+
+/obj/item/feather/chicken/electric/attack_self(mob/user)
+	if(opened && cell)
+		user.visible_message("[user] removes [cell] from [src]!","<span class='notice'>You remove [cell].</span>")
+		cell.update_icon()
+		user.put_in_hands(cell)
+		cell = null
+		update_icon()
+
+
+/obj/item/feather/chicken/electric/examine(mob/living/M)
+	. = ..()
+	if(cell)
+		. += "<span class='notice'>you can tell by the sparks that the battery isnide is at: [DisplayEnergy(cell.charge)].</span>"
+	else
+		. += "<span class='notice'>it has almost no spark.</span>"
+	if(opened)
+		. += "<span class='notice'>there's a cell sized hole in it.</span>"
+
+/*ELECTRIC EGG
+SElF USE: creates some an eggnergy cell, better than most and even better if the chicken is happy, alt clicking makes a good lantern
+FEED USE: creates an emp blast
+throw use: shock target
+*/
+
+/obj/item/reagent_containers/food/snacks/egg/eleggtric
+	name = "Electric egg"
+	desc = "this eleggtrifying egg vibretes with energy"
+	icon_state = "egg-lectric"
+	list_reagents = list(/datum/reagent/teslium = 20)
+	filling_color = "#20324D"
+	mutation = /mob/living/simple_animal/chicken/electric
+
+/obj/item/flashlight/slime/egg
+	name = "glowing egg"
+	desc = "an electric egg pressured into shinning. It emits a strong light when squeezed."
+	icon = 'icons/obj/food/food.dmi'
+	icon_state = "egg-lamp"
+	item_state = "egg-lamp"
+	light_range = 8//luminosity when on
+
+/obj/item/stock_parts/cell/hyper/egg
+	name = "charged egg"
+	desc = "An activated egg, all it's power contained within it's shell."
+	icon = 'icons/obj/food/food.dmi'
+	icon_state = "egg-cell"
+	custom_materials = null
+	rating = 5 //self-recharge makes these desirable
+	self_recharge = 1 // eggs self-recharge, over time
+
+/obj/item/reagent_containers/food/snacks/egg/eleggtric/AltClick(mob/user)
+	. = ..()
+	var/location = get_turf(user)
+	var/obj/item/flashlight/slime/egg/newfl = new(location)
+	user.put_in_active_hand(newfl)
+	playsound(src.loc, 'sound/effects/footstep/slime1.ogg', 75, 1, -3)
+	user.visible_message("<span class='warning'>you squish the [src] is until it shines.</span>")
+	qdel(src)
+
+/obj/item/reagent_containers/food/snacks/egg/eleggtric/attack_self(mob/user)
+	var/location = get_turf(user)
+	var/obj/item/stock_parts/cell/hyper/egg/newc = new(location)
+	user.put_in_active_hand(newc)
+	playsound(src.loc, 'sound/effects/footstep/slime1.ogg', 75, 1, -3)
+	user.visible_message("<span class='warning'>you shake the [src] up until all the electricity get's concentrated into it.</span>")
+	qdel(src)
+
+
+/obj/item/reagent_containers/food/snacks/egg/eleggtric/throw_impact(atom/hit_atom, datum/thrownthing/throwingdatum)
+	if(!..())
+		if(iscarbon(hit_atom))
+			var/mob/living/carbon/target = hit_atom
+			target.electrocute_act(35, src, 1, flags = SHOCK_NOGLOVES|SHOCK_ILLUSION)
+			visible_message("<span class='danger'>[target] get's zapped by the [src]!</span>")
+			qdel(src)
+			return
+		if(istype(hit_atom, /mob/living/simple_animal))
+			var/mob/living/simple_animal/target = hit_atom
+			target.speed += 1
+			target.adjustFireLoss(10)
+			playsound(src, 'sound/effects/light_flicker.ogg', 100, 1)
+			qdel(src)
+			return
+		else
+			..()
+
+/obj/item/reagent_containers/food/snacks/egg/eleggtric/attack(mob/living/M, mob/living/user, attackchain_flags = NONE, damage_multiplier = 1)
+	to_chat(user, "you use the [src] on [M]")
+	if(iscarbon(M))
+		if(!isitactive(M))
+			to_chat(M, "<span class='notice'>Your muscles gets electrified.</span>")
+			qdel(src)
+			muscle_loop(M)
+		else
+			M.adjustStaminaLoss(-50)
+			to_chat(user, "<span class='notice'>you eat the [src] and energyze yourself!.</span>")
+			qdel(src)
+			return
+	else if(istype(M, /mob/living/simple_animal/chicken))
+		var/mob/living/simple_animal/chicken/target = M
+		target.cheery = TRUE
+		M.visible_message("[M] eats the [src]! she seems really happy")
+		qdel(src)
+	else
+		to_chat(user, "you crack the [src] with [M]'s head and reveal the riches inside")
+		var/location = get_turf(M)
+		var/boozetype = get_random_drink()
+		var/booze = new boozetype(location)
+		qdel(src)
+		user.put_in_active_hand(booze)
+
+/obj/item/reagent_containers/food/snacks/egg/eleggtric/proc/muscle_loop(mob/living/carbon/user)
+	var/stacks = 0
+	user.add_movespeed_modifier(/datum/movespeed_modifier/strained_muscles)
+	while(isitactive(user))
+		if(user.stat != CONSCIOUS || user.staminaloss >= 90)
+			to_chat(user, "<span class='notice'>Your muscles relax without the energy to strengthen them.</span>")
+			user.DefaultCombatKnockdown(40)
+			user.remove_movespeed_modifier(/datum/movespeed_modifier/strained_muscles)
+			stacks = 0
+			break
+
+		stacks++
+		//user.take_bodypart_damage(stacks * 0.03, 0)
+		user.adjustStaminaLoss(stacks*9) //At first the rancher may eat eggs fast enough to nullify fatigue, but it will stack
+
+		if(stacks == 5) //Warning message that the stacks are getting too high
+			to_chat(user, "<span class='warning'>Our legs are really starting to hurt...</span>")
+		sleep(40)
+
+/obj/item/reagent_containers/food/snacks/egg/eleggtric/proc/isitactive(mob/living/carbon/checker)
+	var/datum/movespeed_modifier/strained_muscles/buff = new
+	for(var/I in checker.movespeed_modification)
+		if(I == buff.id)	//same thing don't need to touch
+			return TRUE
+	return FALSE
+
 //BIG IRON EDIT -end
 ///////////
 // UDDER //
