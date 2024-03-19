@@ -1122,7 +1122,7 @@ throw use: shock target
 		user.adjustStaminaLoss(stacks*9) //At first the rancher may eat eggs fast enough to nullify fatigue, but it will stack
 
 		if(stacks == 5) //Warning message that the stacks are getting too high
-			to_chat(user, "<span class='warning'>Our legs are really starting to hurt...</span>")
+			to_chat(user, "<span class='warning'>Your legs are really starting to hurt...</span>")
 		sleep(40)
 
 /obj/item/reagent_containers/food/snacks/egg/eleggtric/proc/isitactive(mob/living/carbon/checker)
